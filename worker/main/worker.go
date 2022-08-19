@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/yeongbok77/crontab/master"
+	"github.com/yeongbok77/crontab/worker"
 )
 
 var (
@@ -16,8 +16,8 @@ var (
 
 // 解析命令行参数
 func initArgs() {
-	// master -config ./master.json
-	flag.StringVar(&confFile, "config", "./master.json", "指定master.json")
+	// worker -config ./master.json
+	flag.StringVar(&confFile, "config", "./worker.json", "worker.json")
 	flag.Parse()
 }
 
@@ -37,18 +37,17 @@ func main() {
 	initEnv()
 
 	// 初始化配置
-	if err = master.InitConfig(confFile); err != nil {
+	if err = worker.InitConfig(confFile); err != nil {
 		return
 	}
 
-	// 任务管理器 （etcd）
-	if err = master.InitJobMgr(); err!=nil {
-		goto ERR
+	// 初始化调度器
+	if err = worker.InitScheduler(); err!=nil {
+		return
 	}
 
-
-	// 启动HTTP服务
-	if err = master.InitApiServer(); err != nil {
+	// 初始化任务管理器（etcd）
+	if err = worker.InitJobMgr(); err!=nil {
 		goto ERR
 	}
 
